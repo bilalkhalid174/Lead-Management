@@ -1,21 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface Lead {
-  id: string;
+  id?: string;
   name: string;
   email: string;
-  phone: string | null;
-  company: string | null;
+  phone?: string | null;
+  company?: string | null;
   status: string;
-  notes: string | null;
+  notes?: string | null;
 }
 
-interface LeadModalProps {
+interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (formData: Partial<Lead>) => Promise<void>;
+  onSubmit: (data: Partial<Lead>) => Promise<void> | void;
   editingLead?: Lead | null;
   isLoading?: boolean;
 }
@@ -26,8 +26,8 @@ export default function LeadModal({
   onSubmit,
   editingLead,
   isLoading = false,
-}: LeadModalProps) {
-  const [formData, setFormData] = useState<Partial<Lead>>({
+}: Props) {
+  const [form, setForm] = useState<Partial<Lead>>({
     name: "",
     email: "",
     phone: "",
@@ -36,13 +36,12 @@ export default function LeadModal({
     notes: "",
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
+  // Prefill in edit mode
   useEffect(() => {
     if (editingLead) {
-      setFormData(editingLead);
+      setForm(editingLead);
     } else {
-      setFormData({
+      setForm({
         name: "",
         email: "",
         phone: "",
@@ -51,163 +50,88 @@ export default function LeadModal({
         notes: "",
       });
     }
-    setErrors({});
   }, [editingLead, isOpen]);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+  if (!isOpen) return null;
 
-    if (!formData.name?.trim()) {
-      newErrors.name = "Name is required";
-    }
-
-    if (!formData.email?.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Invalid email format";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    console.log("Submitting form data:", formData);
-    await onSubmit(formData);
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      company: "",
-      status: "NEW",
-      notes: "",
-    });
+    await onSubmit(form);
   };
-
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value || null,
-    }));
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
-    }
-  };
-
-  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="w-full max-w-2xl bg-white rounded-xl shadow-lg">
+        
         {/* Header */}
-        <div className="sticky top-0 flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+        <div className="px-6 py-4 border-b flex justify-between items-center">
+          <h2 className="text-lg font-semibold text-gray-900">
             {editingLead ? "Edit Lead" : "Add New Lead"}
           </h2>
+
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-2xl leading-none"
+            className="text-gray-500 hover:text-gray-800 text-lg"
           >
             ✕
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
-          {/* Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Name *
-            </label>
+        <form onSubmit={handleSubmit} className="p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+            {/* Name */}
             <input
-              type="text"
               name="name"
-              value={formData.name || ""}
+              value={form.name || ""}
               onChange={handleChange}
-              placeholder="Enter lead name"
-              className={`w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.name ? "border-red-500" : "border-gray-300"
-              }`}
+              placeholder="Name"
+              required
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
             />
-            {errors.name && (
-              <p className="text-red-500 text-sm mt-1">{errors.name}</p>
-            )}
-          </div>
 
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Email *
-            </label>
+            {/* Email */}
             <input
-              type="email"
               name="email"
-              value={formData.email || ""}
+              value={form.email || ""}
               onChange={handleChange}
-              placeholder="Enter email"
-              className={`w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.email ? "border-red-500" : "border-gray-300"
-              }`}
+              placeholder="Email"
+              type="email"
+              required
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
             />
-            {errors.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-            )}
-          </div>
 
-          {/* Phone */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Phone
-            </label>
+            {/* Phone */}
             <input
-              type="tel"
               name="phone"
-              value={formData.phone || ""}
+              value={form.phone || ""}
               onChange={handleChange}
-              placeholder="Enter phone number"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Phone"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
             />
-          </div>
 
-          {/* Company */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Company
-            </label>
+            {/* Company */}
             <input
-              type="text"
               name="company"
-              value={formData.company || ""}
+              value={form.company || ""}
               onChange={handleChange}
-              placeholder="Enter company name"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Company"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
             />
-          </div>
 
-          {/* Status */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Status
-            </label>
+            {/* Status */}
             <select
               name="status"
-              value={formData.status || "NEW"}
+              value={form.status || "NEW"}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm col-span-1 sm:col-span-2"
             >
               <option value="NEW">New</option>
               <option value="CONTACTED">Contacted</option>
@@ -215,39 +139,38 @@ export default function LeadModal({
               <option value="LOST">Lost</option>
               <option value="CONVERTED">Converted</option>
             </select>
-          </div>
 
-          {/* Notes */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Notes
-            </label>
+            {/* Notes */}
             <textarea
               name="notes"
-              value={formData.notes || ""}
+              value={form.notes || ""}
               onChange={handleChange}
-              placeholder="Add any notes about this lead"
+              placeholder="Notes..."
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm col-span-1 sm:col-span-2"
             />
           </div>
 
-          {/* Buttons */}
-          <div className="flex gap-3 pt-4">
+          {/* Actions */}
+          <div className="mt-6 flex justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              disabled={isLoading}
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50"
+              className="px-4 py-2 border border-gray-300 rounded-lg text-sm"
             >
               Cancel
             </button>
+
             <button
               type="submit"
               disabled={isLoading}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+              className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm disabled:opacity-50"
             >
-              {isLoading ? "Saving..." : editingLead ? "Update" : "Create"}
+              {isLoading
+                ? "Saving..."
+                : editingLead
+                ? "Update Lead"
+                : "Create Lead"}
             </button>
           </div>
         </form>
