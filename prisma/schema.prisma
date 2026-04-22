@@ -21,6 +21,26 @@ enum Status {
   CONVERTED
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relation
+  leads     Lead[]
+}
+
+
+
 model Lead {
   id        String   @id @default(cuid())
   name      String
@@ -31,4 +51,8 @@ model Lead {
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  //NEW RELATION
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
