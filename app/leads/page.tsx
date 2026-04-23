@@ -210,7 +210,7 @@ export default function LeadsPage() {
         {/* TABLE CONTAINER */}
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto overflow-y-visible">
-            <table className="w-full text-left border-collapse min-w-[1200px]">
+            <table className="w-full text-left border-collapse min-w-300">
               <thead>
                 <tr className="bg-gray-50/50 border-b border-gray-100">
                   {(["name", "company", "status"] as const).map((col) => (
