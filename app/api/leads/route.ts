@@ -1,94 +1,69 @@
-import "dotenv/config";
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { prisma } from "@/lib/prisma";
+import { requireUser } from "@/lib/auth";
 
-// Create a fresh Prisma client for each request to avoid stale credentials
-function getPrismaClient() {
-  const databaseUrl = process.env.DATABASE_URL;
-  
-  if (!databaseUrl) {
-    console.error("DATABASE_URL is not set!");
-    throw new Error("DATABASE_URL environment variable is not set");
-  }
-  
-  console.log("Connecting with DATABASE_URL:", databaseUrl.replace(/:[^:]*@/, ":***@"));
-  
-  return new PrismaClient({
-    adapter: new PrismaPg({
-      connectionString: databaseUrl,
-    }),
-  });
-}
-
+// ✅ GET ALL LEADS (FILTERED BY USER)
 export async function GET() {
-  const prisma = getPrismaClient();
-
   try {
+    const user = await requireUser();
+
     const leads = await prisma.lead.findMany({
+      where: {
+        userId: user.id,
+      },
       orderBy: {
-        id: "asc",
+        createdAt: "desc",
       },
     });
 
-    await prisma.$disconnect();
     return NextResponse.json(leads);
   } catch (error) {
-    await prisma.$disconnect();
-    console.error("Error fetching leads:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch leads", details: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }
 
+// ✅ CREATE LEAD (AUTO USER ID)
 export async function POST(request: Request) {
-  const prisma = getPrismaClient();
-
   try {
+    const user = await requireUser();
     const body = await request.json();
-    const { name, email, phone, company, status, notes } = body;
 
-    // Validate required fields
+    const { name, email, phone } = body;
+
     if (!name || !email) {
       return NextResponse.json(
-        { error: "Name and email are required" },
+        { error: "Name and email required" },
         { status: 400 }
       );
     }
 
-    // Check if email already exists
-    const existingLead = await prisma.lead.findUnique({
-      where: { email },
+    const existing = await prisma.lead.findFirst({
+      where: {
+        email,
+        userId: user.id,
+      },
     });
 
-    if (existingLead) {
-      await prisma.$disconnect();
+    if (existing) {
       return NextResponse.json(
-        { error: "Lead with this email already exists" },
+        { error: "Lead already exists" },
         { status: 409 }
       );
     }
 
-    const newLead = await prisma.lead.create({
+    const lead = await prisma.lead.create({
       data: {
         name,
         email,
-        phone: phone || null,
-        company: company || null,
-        status: status || "NEW",
-        notes: notes || null,
+        phone,
+        userId: user.id, // 🔥 attach automatically
       },
     });
 
-    await prisma.$disconnect();
-    return NextResponse.json(newLead, { status: 201 });
+    return NextResponse.json(lead, { status: 201 });
   } catch (error) {
-    await prisma.$disconnect();
-    console.error("Error creating lead:", error);
     return NextResponse.json(
-      { error: "Failed to create lead", details: String(error) },
+      { error: "Failed to create lead" },
       { status: 500 }
     );
   }

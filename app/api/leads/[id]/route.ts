@@ -1,120 +1,108 @@
-import "dotenv/config";
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { prisma } from "@/lib/prisma";
+import { requireUser } from "@/lib/auth";
 
-// Create a fresh Prisma client for each request to avoid stale credentials
-function getPrismaClient() {
-  const databaseUrl = process.env.DATABASE_URL;
-  
-  if (!databaseUrl) {
-    console.error("DATABASE_URL is not set!");
-    throw new Error("DATABASE_URL environment variable is not set");
-  }
-  
-  return new PrismaClient({
-    adapter: new PrismaPg({
-      connectionString: databaseUrl,
-    }),
-  });
-}
-
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> | { id: string } }
+// ✅ GET SINGLE (WITH OWNERSHIP)
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
 ) {
-  const prisma = getPrismaClient();
-
   try {
-    const { id } = await Promise.resolve(params);
-    const body = await request.json();
-    const { name, email, phone, company, status, notes } = body;
+    const user = await requireUser();
 
-    // Check if lead exists
-    const existingLead = await prisma.lead.findUnique({
-      where: { id },
+    const lead = await prisma.lead.findFirst({
+      where: {
+        id: params.id,
+        userId: user.id,
+      },
     });
 
-    if (!existingLead) {
-      await prisma.$disconnect();
+    if (!lead) {
       return NextResponse.json(
-        { error: "Lead not found" },
+        { error: "Not found" },
         { status: 404 }
       );
     }
 
-    // Check if new email already exists (and is different from current)
-    if (email && email !== existingLead.email) {
-      const emailExists = await prisma.lead.findUnique({
-        where: { email },
-      });
+    return NextResponse.json(lead);
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+}
 
-      if (emailExists) {
-        await prisma.$disconnect();
-        return NextResponse.json(
-          { error: "Lead with this email already exists" },
-          { status: 409 }
-        );
-      }
-    }
+// ✅ UPDATE (VERIFY OWNERSHIP)
+export async function PUT(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const user = await requireUser();
+    const body = await req.json();
 
-    const updatedLead = await prisma.lead.update({
-      where: { id },
-      data: {
-        ...(name && { name }),
-        ...(email && { email }),
-        ...(phone !== undefined && { phone: phone || null }),
-        ...(company !== undefined && { company: company || null }),
-        ...(status && { status }),
-        ...(notes !== undefined && { notes: notes || null }),
+    const existing = await prisma.lead.findFirst({
+      where: {
+        id: params.id,
+        userId: user.id,
       },
     });
 
-    await prisma.$disconnect();
-    return NextResponse.json(updatedLead);
-  } catch (error) {
-    await prisma.$disconnect();
-    console.error("Error updating lead:", error);
+    if (!existing) {
+      return NextResponse.json(
+        { error: "Access denied" },
+        { status: 403 }
+      );
+    }
+
+    const { name, email, phone } = body;
+
+    const updated = await prisma.lead.update({
+      where: { id: params.id },
+      data: {
+        name,
+        email,
+        phone,
+      },
+    });
+
+    return NextResponse.json(updated);
+  } catch {
     return NextResponse.json(
-      { error: "Failed to update lead", details: String(error) },
+      { error: "Failed to update" },
       { status: 500 }
     );
   }
 }
 
+// ✅ DELETE (VERIFY OWNERSHIP)
 export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> | { id: string } }
+  req: Request,
+  { params }: { params: { id: string } }
 ) {
-  const prisma = getPrismaClient();
-
   try {
-    const { id } = await Promise.resolve(params);
+    const user = await requireUser();
 
-    // Check if lead exists
-    const existingLead = await prisma.lead.findUnique({
-      where: { id },
+    const existing = await prisma.lead.findFirst({
+      where: {
+        id: params.id,
+        userId: user.id,
+      },
     });
 
-    if (!existingLead) {
-      await prisma.$disconnect();
+    if (!existing) {
       return NextResponse.json(
-        { error: "Lead not found" },
-        { status: 404 }
+        { error: "Access denied" },
+        { status: 403 }
       );
     }
 
     await prisma.lead.delete({
-      where: { id },
+      where: { id: params.id },
     });
 
-    await prisma.$disconnect();
-    return NextResponse.json({ message: "Lead deleted successfully" });
-  } catch (error) {
-    await prisma.$disconnect();
-    console.error("Error deleting lead:", error);
+    return NextResponse.json({ message: "Deleted" });
+  } catch {
     return NextResponse.json(
-      { error: "Failed to delete lead", details: String(error) },
+      { error: "Failed to delete" },
       { status: 500 }
     );
   }
