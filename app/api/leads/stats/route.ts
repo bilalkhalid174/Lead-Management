@@ -1,3 +1,5 @@
+
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthSession } from "@/lib/auth";
@@ -28,8 +30,8 @@ export async function GET() {
       CONVERTED: 0,
     };
 
-    stats.forEach((stat) => {
-      statusCounts[stat.status] = stat._count;
+    stats.forEach((stat: { status: string; _count: number }) => {
+      statusCounts[stat.status as keyof typeof statusCounts] = stat._count;
     });
 
     return NextResponse.json({ total, ...statusCounts });

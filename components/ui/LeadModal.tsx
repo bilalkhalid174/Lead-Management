@@ -37,19 +37,20 @@ export default function LeadModal({
   });
 
   // Prefill in edit mode
-  useEffect(() => {
-    if (editingLead) {
-      setForm(editingLead);
-    } else {
-      setForm({
+  const formValue = editingLead
+    ? editingLead
+    : {
         name: "",
         email: "",
         phone: "",
         company: "",
         status: "NEW",
         notes: "",
-      });
-    }
+      };
+
+  useEffect(() => {
+    setForm(formValue);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingLead, isOpen]);
 
   if (!isOpen) return null;

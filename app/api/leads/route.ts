@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
@@ -17,7 +18,7 @@ export async function GET() {
     });
 
     return NextResponse.json(leads);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
     const user = await requireUser();
     const body = await request.json();
 
-    const { name, email, phone } = body;
+    const { name, email, phone, company, status, notes } = body;
 
     if (!name || !email) {
       return NextResponse.json(
@@ -56,12 +57,15 @@ export async function POST(request: Request) {
         name,
         email,
         phone,
-        userId: user.id, // 🔥 attach automatically
+        company,
+        status: status || "NEW",
+        notes,
+        userId: user.id,
       },
     });
 
     return NextResponse.json(lead, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to create lead" },
       { status: 500 }

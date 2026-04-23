@@ -1,5 +1,8 @@
+//seed.ts
+
 import { PrismaClient, Status } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({
@@ -8,6 +11,18 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
+  // Create a seed user first
+  const hashedPassword = await bcrypt.hash("password123", 10);
+  const user = await prisma.user.upsert({
+    where: { email: "seed@example.com" },
+    update: {},
+    create: {
+      name: "Seed User",
+      email: "seed@example.com",
+      password: hashedPassword,
+    },
+  });
+
   await prisma.lead.createMany({
     data: [
       {
@@ -17,6 +32,7 @@ async function main() {
         company: "TechSoft",
         status: Status.NEW,
         notes: "Interested in CRM solution",
+        userId: user.id,
       },
       {
         name: "Sara Ahmed",
@@ -25,6 +41,7 @@ async function main() {
         company: "BizCorp",
         status: Status.CONTACTED,
         notes: "Follow-up scheduled",
+        userId: user.id,
       },
       {
         name: "Usman Tariq",
@@ -33,6 +50,7 @@ async function main() {
         company: "DevSolutions",
         status: Status.QUALIFIED,
         notes: "Budget approved",
+        userId: user.id,
       },
       {
         name: "Ayesha Malik",
@@ -41,6 +59,7 @@ async function main() {
         company: "MarketPro",
         status: Status.LOST,
         notes: "Chose competitor",
+        userId: user.id,
       },
       {
         name: "Bilal Hussain",
@@ -49,6 +68,7 @@ async function main() {
         company: "InnovateX",
         status: Status.CONVERTED,
         notes: "Successfully onboarded",
+        userId: user.id,
       },
 
       // remaining 10 entries
@@ -60,6 +80,7 @@ async function main() {
         company: "AlphaTech",
         status: Status.NEW,
         notes: "Requested demo",
+        userId: user.id,
       },
       {
         name: "Fatima Noor",
@@ -68,6 +89,7 @@ async function main() {
         company: "Bright Solutions",
         status: Status.CONTACTED,
         notes: "Waiting response",
+        userId: user.id,
       },
       {
         name: "Zain Ali",
@@ -76,6 +98,7 @@ async function main() {
         company: "CodeBase",
         status: Status.QUALIFIED,
         notes: "Decision pending",
+        userId: user.id,
       },
       {
         name: "Maryam Iqbal",
@@ -84,6 +107,7 @@ async function main() {
         company: "NextGen",
         status: Status.LOST,
         notes: "Budget issue",
+        userId: user.id,
       },
       {
         name: "Ahmed Raza",
@@ -92,6 +116,7 @@ async function main() {
         company: "FutureTech",
         status: Status.CONVERTED,
         notes: "Closed successfully",
+        userId: user.id,
       },
       {
         name: "Sana Khan",
@@ -100,6 +125,7 @@ async function main() {
         company: "VisionSoft",
         status: Status.NEW,
         notes: "Cold lead",
+        userId: user.id,
       },
       {
         name: "Imran Ali",
@@ -108,6 +134,7 @@ async function main() {
         company: "TechWorld",
         status: Status.CONTACTED,
         notes: "Needs follow-up",
+        userId: user.id,
       },
       {
         name: "Nida Sheikh",
@@ -116,6 +143,7 @@ async function main() {
         company: "SoftHub",
         status: Status.QUALIFIED,
         notes: "High potential",
+        userId: user.id,
       },
       {
         name: "Omer Farooq",
@@ -124,6 +152,7 @@ async function main() {
         company: "DevCore",
         status: Status.LOST,
         notes: "No response",
+        userId: user.id,
       },
       {
         name: "Kiran Malik",
@@ -132,6 +161,7 @@ async function main() {
         company: "CloudNet",
         status: Status.CONVERTED,
         notes: "Converted successfully",
+        userId: user.id,
       },
     ],
   });

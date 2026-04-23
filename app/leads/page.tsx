@@ -41,7 +41,7 @@ export default function LeadsPage() {
       if (!res.ok) throw new Error("Failed to fetch leads");
       const data = await res.json();
       setLeads(data);
-    } catch (err) {
+    } catch  {
       // Error toast for fetching
       showToast.error("Could not load leads from server.");
       setLeads([]);
@@ -108,8 +108,8 @@ export default function LeadsPage() {
       }
       setIsModalOpen(false);
       setEditingLead(null);
-    } catch (err: any) {
-      showToast.error(err.message || "Something went wrong while saving.");
+    } catch (err: unknown) {
+      showToast.error(err instanceof Error ? err.message : "Something went wrong while saving.");
     } finally {
       setIsSubmitting(false);
     }

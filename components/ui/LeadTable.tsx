@@ -1,7 +1,17 @@
+interface Lead {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  company: string | null;
+  status: string;
+  notes: string | null;
+}
+
 interface Props {
-  leads: any[];
+  leads: Lead[];
   loading: boolean;
-  onEdit: (l: any) => void;
+  onEdit: (l: Lead) => void;
   onDelete: (id: string) => void;
 }
 

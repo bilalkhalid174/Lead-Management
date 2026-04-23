@@ -1,3 +1,5 @@
+
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
@@ -5,14 +7,15 @@ import { requireUser } from "@/lib/auth";
 // ✅ GET SINGLE (WITH OWNERSHIP)
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireUser();
 
     const lead = await prisma.lead.findFirst({
       where: {
-        id: params.id,
+        id,
         userId: user.id,
       },
     });
@@ -33,15 +36,16 @@ export async function GET(
 // ✅ UPDATE (VERIFY OWNERSHIP)
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireUser();
     const body = await req.json();
 
     const existing = await prisma.lead.findFirst({
       where: {
-        id: params.id,
+        id,
         userId: user.id,
       },
     });
@@ -56,7 +60,7 @@ export async function PUT(
     const { name, email, phone } = body;
 
     const updated = await prisma.lead.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name,
         email,
@@ -76,14 +80,15 @@ export async function PUT(
 // ✅ DELETE (VERIFY OWNERSHIP)
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireUser();
 
     const existing = await prisma.lead.findFirst({
       where: {
-        id: params.id,
+        id,
         userId: user.id,
       },
     });
@@ -96,7 +101,7 @@ export async function DELETE(
     }
 
     await prisma.lead.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: "Deleted" });

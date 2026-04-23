@@ -1,15 +1,6 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { PrismaClient } from "@/app/generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL!,
-});
-
-const prisma = new PrismaClient({
-  adapter,
-});
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
@@ -44,7 +35,7 @@ export async function POST(req: Request) {
       { message: "User created successfully", user },
       { status: 201 }
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { message: "Server error" },
       { status: 500 }

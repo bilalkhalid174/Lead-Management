@@ -80,7 +80,7 @@ export default function RegisterPage() {
 
       showToast.success("Account created successfully");
       router.push("/login");
-    } catch (err) {
+    } catch  {
       setError("Server error");
       showToast.error("Server error");
     } finally {
