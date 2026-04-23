@@ -57,7 +57,7 @@ export async function PUT(
       );
     }
 
-    const { name, email, phone } = body;
+    const { name, email, phone, company, status, notes } = body;
 
     const updated = await prisma.lead.update({
       where: { id },
@@ -65,6 +65,9 @@ export async function PUT(
         name,
         email,
         phone,
+        company,
+        status,
+        notes,
       },
     });
 

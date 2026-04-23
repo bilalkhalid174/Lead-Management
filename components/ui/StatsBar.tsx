@@ -46,7 +46,7 @@ export default function StatsBar({ stats, loading }: StatsBarProps) {
         {statCards.map((card) => (
           <div 
             key={card.label} 
-            className="group bg-white border border-gray-200 rounded-2xl p-7 
+            className="group bg-white border border-gray-200 rounded-lg p-7 
                        transition-all duration-300 ease-in-out
                        hover:border-gray-400 hover:shadow-lg hover:-translate-y-1"
           >

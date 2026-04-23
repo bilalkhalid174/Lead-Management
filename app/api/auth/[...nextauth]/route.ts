@@ -54,22 +54,33 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
 
-  // ✅ 6. Callbacks (IMPORTANT)
+ // ✅ 6. Callbacks (MODIFIED for Real-time updates)
   callbacks: {
-    async jwt({ token, user }) {
-      // runs on login
+    async jwt({ token, user, trigger, session }) {
+      // 1. Initial login par data save karna
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.name = user.name;
+        token.email = user.email;
       }
+
+      // 2. 🔥 Sabse important: Jab client-side se update() call ho
+      if (trigger === "update" && session?.user) {
+        token.name = session.user.name;
+        token.email = session.user.email;
+      }
+
       return token;
     },
 
     async session({ session, token }) {
-      // attach to session
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
+        // token se updated name aur email session mein pass karein
+        session.user.name = token.name;
+        session.user.email = token.email;
       }
       return session;
     },

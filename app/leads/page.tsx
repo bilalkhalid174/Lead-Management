@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import LeadModal from "@/components/ui/LeadModal";
-// 1. Toast utility import karein
 import { showToast } from "@/app/utils/notifications"; 
+import { useSession } from "next-auth/react"; 
+import { Pencil, Trash2, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
 interface Lead {
   id: string;
@@ -14,7 +15,9 @@ interface Lead {
   company: string | null;
   status: string;
   notes: string | null;
-  updatedAt?: string; 
+  createdAt: string;
+  updatedAt?: string; // Yeh field wapas add kar di gayi hai
+  createdBy?: { name: string } | string; 
 }
 
 export default function LeadsPage() {
@@ -31,6 +34,8 @@ export default function LeadsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const { data: session } = useSession(); 
+
   useEffect(() => { fetchLeads(); }, []);
   useEffect(() => { setCurrentPage(1); }, [search, statusFilter, sortBy, sortOrder]);
 
@@ -41,8 +46,7 @@ export default function LeadsPage() {
       if (!res.ok) throw new Error("Failed to fetch leads");
       const data = await res.json();
       setLeads(data);
-    } catch  {
-      // Error toast for fetching
+    } catch {
       showToast.error("Could not load leads from server.");
       setLeads([]);
     } finally {
@@ -73,7 +77,6 @@ export default function LeadsPage() {
   const paginatedLeads = processedLeads.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleSubmitForm = async (formData: Partial<Lead>) => {
-    // Basic frontend edge case check
     if (!formData.name || !formData.email) {
       showToast.error("Name and Email are required!");
       return;
@@ -92,7 +95,6 @@ export default function LeadsPage() {
       const saved = await res.json();
 
       if (!res.ok) {
-        // Handling Duplicate Email Edge Case from Server
         if (saved.message?.toLowerCase().includes("email")) {
           throw new Error("This email is already in use.");
         }
@@ -140,7 +142,7 @@ export default function LeadsPage() {
   const getStatusStyle = (status: string) => {
     const map: Record<string, string> = {
       NEW: "bg-gray-50 text-gray-600 border-gray-200",
-      CONTACTED: "bg-blue-50/50 text-blue-700 border-blue-100",
+      CONTACTED: "bg-blue-50 text-blue-700 border-blue-100",
       QUALIFIED: "bg-gray-900 text-white border-transparent",
       LOST: "bg-red-50 text-red-700 border-red-200",
       CONVERTED: "bg-green-50 text-green-700 border-green-100",
@@ -153,20 +155,20 @@ export default function LeadsPage() {
     return new Date(dateStr).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+      year: "numeric",
     });
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa] text-gray-900 selection:bg-gray-200">
+    <div className="min-h-screen bg-[#fafafa] text-gray-900 selection:bg-gray-200 font-sans">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12">
+      <div className="max-w-full mx-auto px-4 sm:px-6 py-8 md:py-12">
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
           <div>
-            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-gray-950">Leads</h1>
+            <h1 className="text-3xl font-semibold tracking-tight text-gray-950">Leads Management</h1>
+            <p className="text-sm text-gray-500 mt-1">Manage and track your customer pipeline</p>
           </div>
 
           <button
@@ -174,27 +176,27 @@ export default function LeadsPage() {
               setEditingLead(null);
               setIsModalOpen(true);
             }}
-            className="w-full sm:w-auto px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-full transition-all duration-200 shadow-sm active:scale-95"
+            className="w-full sm:w-auto px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-xl transition-all shadow-sm active:scale-95"
           >
-            Create Lead
+            + Create New Lead
           </button>
         </div>
 
         {/* FILTERS */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-8">
-          <div className="relative w-full sm:w-96">
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="relative flex-1">
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search Name, Email or Company..."
-              className="w-full pl-4 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/5 focus:border-gray-400 transition-all text-sm"
+              placeholder="Search by name, email or company..."
+              className="w-full pl-4 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900/5 focus:border-gray-400 outline-none transition-all text-sm"
             />
           </div>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full sm:w-auto px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 text-sm cursor-pointer"
+            className="w-full md:w-48 px-4 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-gray-400 text-sm cursor-pointer"
           >
             <option value="">All Statuses</option>
             <option value="NEW">New</option>
@@ -206,27 +208,29 @@ export default function LeadsPage() {
         </div>
 
         {/* TABLE CONTAINER */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left table-auto">
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+          <div className="overflow-x-auto overflow-y-visible">
+            <table className="w-full text-left border-collapse min-w-[1200px]">
               <thead>
                 <tr className="bg-gray-50/50 border-b border-gray-100">
                   {(["name", "company", "status"] as const).map((col) => (
                     <th
                       key={col}
                       onClick={() => handleSort(col)}
-                      className={`px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 cursor-pointer hover:text-gray-900 transition-colors ${col === 'company' ? 'hidden md:table-cell' : ''}`}
+                      className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 cursor-pointer hover:text-gray-900"
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
                         {col}
-                        <span className="text-gray-300">
-                          {sortBy === col ? (sortOrder === "asc" ? "↑" : "↓") : "⇅"}
-                        </span>
+                        {sortBy === col ? (
+                          sortOrder === "asc" ? <ChevronUp size={14}/> : <ChevronDown size={14}/>
+                        ) : <ChevronsUpDown size={14} className="opacity-30"/>}
                       </div>
                     </th>
                   ))}
-                  <th className="hidden lg:table-cell px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Notes</th>
-                  <th className="hidden xl:table-cell px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Last Updated</th>
+                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Phone</th>
+                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Created At</th>
+                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Updated At</th>
+                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Created By</th>
                   <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 text-right">Actions</th>
                 </tr>
               </thead>
@@ -234,58 +238,70 @@ export default function LeadsPage() {
               <tbody className="divide-y divide-gray-50">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="py-24 text-center">
+                    <td colSpan={8} className="py-24 text-center">
                       <div className="w-8 h-8 mx-auto border-[3px] border-gray-100 border-t-gray-900 rounded-full animate-spin" />
                     </td>
                   </tr>
                 ) : paginatedLeads.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-20 text-center text-gray-400 text-sm">No leads found matching your criteria.</td>
+                    <td colSpan={8} className="py-20 text-center text-gray-400 text-sm italic">No leads found.</td>
                   </tr>
                 ) : (
-                  paginatedLeads.map((lead) => (
-                    <tr key={lead.id} className="group hover:bg-gray-50/30 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-gray-900">{lead.name}</span>
-                          <span className="text-xs text-gray-400 md:hidden">{lead.company || "No Company"}</span>
-                          <span className="hidden md:block text-xs text-gray-400 truncate max-w-45">{lead.email}</span>
-                        </div>
-                      </td>
-                      <td className="hidden md:table-cell px-6 py-4">
-                        <span className="text-sm text-gray-600 font-medium">{lead.company || "—"}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex px-2.5 py-1 text-[10px] font-bold rounded-md border ${getStatusStyle(lead.status)}`}>
-                          {lead.status}
-                        </span>
-                      </td>
-                      <td className="hidden lg:table-cell px-6 py-4">
-                        <p className="text-sm text-gray-500 truncate max-w-55 italic">
-                          {lead.notes ? `"${lead.notes}"` : <span className="text-gray-200">—</span>}
-                        </p>
-                      </td>
-                      <td className="hidden xl:table-cell px-6 py-4 text-xs text-gray-400">
-                        {formatDate(lead.updatedAt)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => { setEditingLead(lead); setIsModalOpen(true); }}
-                            className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200 rounded-lg transition-all"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => setDeleteConfirm(lead.id)}
-                            className="px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                  paginatedLeads.map((lead) => {
+                    const creatorName = typeof lead.createdBy === 'object' 
+                      ? lead.createdBy.name 
+                      : (lead.createdBy || session?.user?.name || "System");
+
+                    return (
+                      <tr key={lead.id} className="group hover:bg-gray-50/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-gray-900">{lead.name}</span>
+                            <span className="text-[11px] text-gray-400">{lead.email}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">{lead.company || "—"}</td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex px-2.5 py-1 text-[10px] font-bold rounded-full border ${getStatusStyle(lead.status)}`}>
+                            {lead.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">{lead.phone || "—"}</td>
+                        <td className="px-6 py-4 text-xs text-gray-400">{formatDate(lead.createdAt)}</td>
+                        <td className="px-6 py-4 text-xs text-gray-400">{formatDate(lead.updatedAt)}</td>
+                        
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-indigo-50 flex items-center justify-center text-[10px] font-bold text-indigo-600 border border-indigo-100 uppercase">
+                               {creatorName.charAt(0)}
+                            </div>
+                            <span className="text-sm text-gray-600 font-medium">
+                              {creatorName}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td className="px-6 py-4">
+                          <div className="flex justify-end gap-1">
+                            <button
+                              title="Edit Lead"
+                              onClick={() => { setEditingLead(lead); setIsModalOpen(true); }}
+                              className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all"
+                            >
+                              <Pencil size={16} />
+                            </button>
+                            <button
+                              title="Delete Lead"
+                              onClick={() => setDeleteConfirm(lead.id)}
+                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -294,22 +310,22 @@ export default function LeadsPage() {
 
         {/* PAGINATION */}
         {!loading && totalPages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between mt-8 gap-4">
-            <p className="text-sm text-gray-500 font-medium order-2 sm:order-1">
+          <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
+            <p className="text-xs text-gray-500 font-medium">
               Showing page <span className="text-gray-900">{currentPage}</span> of {totalPages}
             </p>
-            <div className="flex gap-2 order-1 sm:order-2 w-full sm:w-auto">
+            <div className="flex gap-2">
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
-                className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium border border-gray-200 rounded-xl hover:bg-white disabled:opacity-40 transition-all"
+                className="px-4 py-2 text-xs font-medium border border-gray-200 rounded-xl hover:bg-white disabled:opacity-30 transition-all"
               >
                 Previous
               </button>
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => p + 1)}
-                className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium border border-gray-200 rounded-xl hover:bg-white disabled:opacity-40 transition-all"
+                className="px-4 py-2 text-xs font-medium border border-gray-200 rounded-xl hover:bg-white disabled:opacity-30 transition-all"
               >
                 Next
               </button>
@@ -320,24 +336,27 @@ export default function LeadsPage() {
 
       {/* DELETE MODAL */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-8 rounded-2xl w-full max-w-sm shadow-2xl border border-gray-100 animate-in zoom-in-95 duration-200">
-            <h3 className="text-lg font-semibold text-gray-950">Confirm Deletion</h3>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-2xl w-full max-w-sm shadow-xl animate-in zoom-in-95">
+            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-4">
+               <Trash2 className="text-red-600" size={24} />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-950">Delete Lead?</h3>
             <p className="mt-2 text-sm text-gray-500 leading-relaxed">
-              This action cannot be undone. This lead will be permanently deleted.
+              Are you sure? This lead will be removed permanently. This action cannot be reversed.
             </p>
-            <div className="mt-8 flex gap-3">
+            <div className="mt-6 flex gap-3">
               <button 
-                className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-xl transition-colors"
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
                 onClick={() => setDeleteConfirm(null)}
               >
                 Cancel
               </button>
               <button 
-                className="flex-1 px-4 py-2 text-sm font-medium bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors shadow-sm"
+                className="flex-1 px-4 py-2.5 text-sm font-medium bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors shadow-sm"
                 onClick={() => handleDelete(deleteConfirm)}
               >
-                Delete Lead
+                Delete
               </button>
             </div>
           </div>

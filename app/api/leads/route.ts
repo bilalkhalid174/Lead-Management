@@ -17,6 +17,8 @@ export async function GET() {
       },
     });
 
+    console.log(`Found ${leads.length} leads for user ${user.id}`); // Check karein terminal mein
+
     return NextResponse.json(leads);
   } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -38,19 +40,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // --- IS HISSE KO AISE UPDATE KAREIN ---
+    // Hum sirf email check kar rahe hain, userId nikal di hai
     const existing = await prisma.lead.findFirst({
       where: {
-        email,
-        userId: user.id,
+        email: email, 
       },
     });
 
     if (existing) {
       return NextResponse.json(
-        { error: "Lead already exists" },
+        { error: "Lead already exists with this email" },
         { status: 409 }
       );
     }
+    // --------------------------------------
 
     const lead = await prisma.lead.create({
       data: {
@@ -65,9 +69,11 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(lead, { status: 201 });
-  } catch {
+
+  } catch (error: any) {
+    console.error("PRISMA_ERROR:", error);
     return NextResponse.json(
-      { error: "Failed to create lead" },
+      { error: error.message || "Failed to create lead" },
       { status: 500 }
     );
   }
