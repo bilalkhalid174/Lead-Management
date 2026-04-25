@@ -53,8 +53,8 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
-    async jwt({ token, user }) {
-      // ✅ first login only
+    async jwt({ token, user, trigger, session }) {
+      // ✅ First login logic
       if (user) {
         token.id = user.id;
         token.role = user.role;
@@ -67,6 +67,13 @@ export const authOptions: NextAuthOptions = {
         token.exp = now + 60 * 15;
       }
 
+      // 🔥 FIX: Handle client-side update() call
+      // Jab Settings page se update() call hoga, ye trigger naye data ko token mein save karega
+      if (trigger === "update" && session) {
+        if (session.name) token.name = session.name;
+        if (session.email) token.email = session.email;
+      }
+
       return token;
     },
 
@@ -74,8 +81,8 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
-        session.user.name = token.name;
-        session.user.email = token.email;
+        session.user.name = token.name as string;
+        session.user.email = token.email as string;
       }
 
       return session;
