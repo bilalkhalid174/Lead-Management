@@ -72,8 +72,6 @@ export default function SettingsPage() {
 
       /**
        * CRITICAL FIX: NextAuth Session Sync
-       * Hum data ko direct bhej rahe hain taake [...nextauth] ka 
-       * trigger === "update" isse sahi se catch kar sake.
        */
       await update({
         name: name,
@@ -97,19 +95,21 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-[#fafafa] text-gray-900 selection:bg-gray-200 font-sans">
       <Navbar />
 
-      <main className="max-w-full mx-auto px-4 sm:px-6 py-8 md:py-12">
+      {/* Padding adjusted for mobile and desktop */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         <div className="mb-10">
-          <h1 className="text-3xl font-semibold tracking-tight text-gray-950">Account Settings</h1>
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-gray-950">Account Settings</h1>
           <p className="text-sm text-gray-500 mt-1">
             Update your profile details, change your password, and manage your account security settings.
           </p>
         </div>
 
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+          {/* Responsive grid: 1 col on mobile, 2 cols on lg screens */}
           <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-100">
             
-            {/* LEFT: DISPLAY INFO - Session data for real-time reflection */}
-            <div className="p-6 sm:p-10 space-y-8">
+            {/* LEFT: DISPLAY INFO */}
+            <div className="p-6 sm:p-8 md:p-10 space-y-8">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-gray-50 rounded-lg border border-gray-100">
                   <User size={18} className="text-gray-500" />
@@ -120,17 +120,17 @@ export default function SettingsPage() {
               <div className="space-y-6">
                 <div>
                   <label className="text-[11px] font-bold uppercase tracking-wider text-gray-800 block mb-1">Full Name</label>
-                  <p className="text-sm font-medium text-gray-500">{session?.user?.name || "—"}</p>
+                  <p className="text-sm font-medium text-gray-500 wrap-break-words">{session?.user?.name || "—"}</p>
                 </div>
                 <div>
                   <label className="text-[11px] font-bold uppercase tracking-wider text-gray-800 block mb-1">Email Address</label>
-                  <p className="text-sm font-medium text-gray-500">{session?.user?.email || "—"}</p>
+                  <p className="text-sm font-medium text-gray-500 wrap-break-words">{session?.user?.email || "—"}</p>
                 </div>
               </div>
             </div>
 
             {/* RIGHT: SECURITY & ACTION */}
-            <div className="p-6 sm:p-10 space-y-8 bg-gray-50/30 flex flex-col justify-between">
+            <div className="p-6 sm:p-8 md:p-10 space-y-8 bg-gray-50/30 flex flex-col justify-between">
               <div className="space-y-8">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 bg-gray-50 rounded-lg border border-gray-100">
@@ -148,7 +148,7 @@ export default function SettingsPage() {
               <div className="pt-6">
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-all shadow-sm active:scale-95"
+                  className="w-full lg:w-auto flex items-center justify-center gap-2 px-8 py-3 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-all shadow-sm active:scale-95"
                 >
                   <Settings2 size={16} />
                   Update Account Details
@@ -160,10 +160,10 @@ export default function SettingsPage() {
         </div>
       </main>
 
-      {/* MODAL */}
+      {/* MODAL: Responsive width and padding */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all">
-          <div className="bg-white p-6 sm:p-8 rounded-lg w-full max-w-md shadow-xl border border-gray-100">
+          <div className="bg-white p-6 sm:p-8 rounded-lg w-full max-w-md shadow-xl border border-gray-100 max-h-[95vh] overflow-y-auto">
             <h2 className="text-xl font-semibold text-gray-950 mb-1">Edit Account</h2>
             <p className="text-sm text-gray-500 mb-8">Update your profile info and security credentials.</p>
 
@@ -209,14 +209,14 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 mt-10">
-              <button onClick={closeModal} className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+            <div className="flex flex-col sm:flex-row items-center justify-end gap-3 mt-10">
+              <button onClick={closeModal} className="w-full sm:w-auto order-2 sm:order-1 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
                 Cancel
               </button>
               <button
                 onClick={handleUpdateAccount}
                 disabled={loading}
-                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-all shadow-sm active:scale-95 disabled:bg-gray-300"
+                className="w-full sm:w-auto order-1 sm:order-2 flex items-center justify-center gap-2 px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-all shadow-sm active:scale-95 disabled:bg-gray-300"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save All Changes"}
               </button>
