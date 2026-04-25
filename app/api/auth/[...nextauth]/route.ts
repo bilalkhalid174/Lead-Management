@@ -14,21 +14,18 @@ export const authOptions: NextAuthOptions = {
       },
 
       async authorize(credentials) {
-        // ✅ 1. Validate input
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Email and password are required");
         }
 
-        // ✅ 2. Find user
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         });
 
         if (!user) {
-          throw new Error("Invalid email or password"); // 🔥 don't reveal which one
+          throw new Error("Invalid email or password");
         }
 
-        // ✅ 3. Compare password
         const isValid = await bcrypt.compare(
           credentials.password,
           user.password
@@ -38,7 +35,6 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid email or password");
         }
 
-        // ✅ 4. Return safe user object (NO password)
         return {
           id: user.id,
           name: user.name,
@@ -49,26 +45,26 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
 
-  // ✅ 5. JWT strategy
+  // 🔥 FIX: stop auto session extension
   session: {
     strategy: "jwt",
+    maxAge: 60 * 15,
+    updateAge: 0, // IMPORTANT: disables auto refresh
   },
 
- // ✅ 6. Callbacks (MODIFIED for Real-time updates)
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
-      // 1. Initial login par data save karna
+    async jwt({ token, user }) {
+      // ✅ first login only
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.name = user.name;
         token.email = user.email;
-      }
 
-      // 2. 🔥 Sabse important: Jab client-side se update() call ho
-      if (trigger === "update" && session?.user) {
-        token.name = session.user.name;
-        token.email = session.user.email;
+        // 🔥 HARD EXPIRY (FIXED TIME)
+        const now = Math.floor(Date.now() / 1000);
+        token.iat = now;
+        token.exp = now + 60 * 15;
       }
 
       return token;
@@ -78,23 +74,19 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
-        // token se updated name aur email session mein pass karein
         session.user.name = token.name;
         session.user.email = token.email;
       }
+
       return session;
     },
   },
 
-  // ✅ 7. Custom login page
   pages: {
     signIn: "/login",
   },
 
-  // ✅ 8. Secret (required)
   secret: process.env.NEXTAUTH_SECRET,
-
-  // ✅ 9. Debug (optional but useful in dev)
   debug: process.env.NODE_ENV === "development",
 };
 

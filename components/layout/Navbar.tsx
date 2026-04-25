@@ -12,11 +12,23 @@ const Navbar = () => {
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
 
+  // 🛠️ Navigation Items List
   const navItems = [
     { label: "Dashboard", route: "/" },
     { label: "Leads", route: "/leads" },
     { label: "Settings", route: "/settings" },
+    // 🔒 Admin link hidden by default
+    { label: "Admin", route: "/admin", adminOnly: true },
   ];
+
+  // 🛡️ Filter items based on user role
+  // Normal user ko adminOnly items nahi dikhengi
+  const filteredNavItems = navItems.filter(item => {
+    if (item.adminOnly) {
+      return session?.user?.role === "ADMIN";
+    }
+    return true;
+  });
 
   const isActive = (route: string) => path === route;
 
@@ -36,15 +48,15 @@ const Navbar = () => {
         </div>
 
         {/* DESKTOP MIDDLE NAVIGATION */}
-        <div className="hidden md:flex items-center gap-3  p-1">
-          {navItems.map((item) => (
+        <div className="hidden md:flex items-center gap-3 p-1">
+          {filteredNavItems.map((item) => (
             <button
               key={item.route}
               onClick={() => router.push(item.route)}
               className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
                 isActive(item.route)
-                  ? "bg-black text-white shadow-sm border border-zinc-200"
-                  : "text-zinc-900 hover:text-zinc-900 hover:bg-white/50"
+                  ? "bg-black text-white shadow-sm"
+                  : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50"
               }`}
             >
               {item.label}
@@ -54,14 +66,13 @@ const Navbar = () => {
 
         {/* RIGHT ACTIONS: USER & LOGOUT */}
         <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-          {/* User Name Badge - Desktop/Tablet */}
+          {/* User Name Badge */}
           <div className="hidden sm:flex items-center gap-2 pl-2 pr-3 py-1.5 bg-zinc-50 border border-zinc-100 rounded-full">
             <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center border border-zinc-200 shadow-sm">
                <UserIcon className="w-3.5 h-3.5 text-zinc-600" />
             </div>
             <span className="text-[10px] font-bold text-zinc-700 uppercase tracking-widest">
-              {/* Yeh portion Settings page ke update() se auto-sync hota hai */}
-              {session?.user?.name || "Admin"}
+              {session?.user?.name || "User"}
             </span>
           </div>
 
@@ -90,7 +101,7 @@ const Navbar = () => {
       {isOpen && (
         <div className="absolute top-16 left-0 right-0 bg-white border-b border-zinc-200 p-4 md:hidden shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300 z-40">
           <div className="flex flex-col gap-2">
-            {navItems.map((item) => (
+            {filteredNavItems.map((item) => (
               <button
                 key={item.route}
                 onClick={() => {
@@ -106,18 +117,6 @@ const Navbar = () => {
                 {item.label}
               </button>
             ))}
-            
-            {/* Mobile User Info Footer */}
-            <div className="mt-2 p-4 bg-zinc-50 rounded-xl flex items-center justify-between border border-zinc-100">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center border border-zinc-200 shadow-sm">
-                  <UserIcon className="w-4 h-4 text-zinc-600" />
-                </div>
-                <span className="text-sm font-bold text-zinc-700">
-                  {session?.user?.name || "Admin"}
-                </span>
-              </div>
-            </div>
           </div>
         </div>
       )}

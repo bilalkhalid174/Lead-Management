@@ -16,7 +16,7 @@ interface Lead {
   status: string;
   notes: string | null;
   createdAt: string;
-  updatedAt?: string; // Yeh field wapas add kar di gayi hai
+  updatedAt?: string;
   createdBy?: { name: string } | string; 
 }
 
@@ -176,7 +176,7 @@ export default function LeadsPage() {
               setEditingLead(null);
               setIsModalOpen(true);
             }}
-            className="w-full sm:w-auto px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-xl transition-all shadow-sm active:scale-95"
+            className="w-full sm:w-auto px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-all shadow-sm active:scale-95"
           >
             + Create New Lead
           </button>
@@ -189,14 +189,14 @@ export default function LeadsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name, email or company..."
-              className="w-full pl-4 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900/5 focus:border-gray-400 outline-none transition-all text-sm"
+              className="w-full pl-4 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900/5 focus:border-gray-400 outline-none transition-all text-sm"
             />
           </div>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full md:w-48 px-4 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-gray-400 text-sm cursor-pointer"
+            className="w-full md:w-48 px-4 py-2.5 bg-white border border-gray-200 rounded-lg outline-none focus:border-gray-400 text-sm cursor-pointer"
           >
             <option value="">All Statuses</option>
             <option value="NEW">New</option>
@@ -208,7 +208,7 @@ export default function LeadsPage() {
         </div>
 
         {/* TABLE CONTAINER */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
           <div className="overflow-x-auto overflow-y-visible">
             <table className="w-full text-left border-collapse min-w-300">
               <thead>
@@ -228,6 +228,7 @@ export default function LeadsPage() {
                     </th>
                   ))}
                   <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Phone</th>
+                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Notes</th>
                   <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Created At</th>
                   <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Updated At</th>
                   <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Created By</th>
@@ -238,13 +239,13 @@ export default function LeadsPage() {
               <tbody className="divide-y divide-gray-50">
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="py-24 text-center">
+                    <td colSpan={9} className="py-24 text-center">
                       <div className="w-8 h-8 mx-auto border-[3px] border-gray-100 border-t-gray-900 rounded-full animate-spin" />
                     </td>
                   </tr>
                 ) : paginatedLeads.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-20 text-center text-gray-400 text-sm italic">No leads found.</td>
+                    <td colSpan={9} className="py-20 text-center text-gray-400 text-sm italic">No leads found.</td>
                   </tr>
                 ) : (
                   paginatedLeads.map((lead) => {
@@ -262,11 +263,14 @@ export default function LeadsPage() {
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600">{lead.company || "—"}</td>
                         <td className="px-6 py-4">
-                          <span className={`inline-flex px-2.5 py-1 text-[10px] font-bold rounded-full border ${getStatusStyle(lead.status)}`}>
+                          <span className={`inline-flex px-2.5 py-1 text-[10px] font-bold rounded-lg border ${getStatusStyle(lead.status)}`}>
                             {lead.status}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-500">{lead.phone || "—"}</td>
+                        <td className="px-6 py-4 text-sm text-gray-500 max-w-37.5 truncate" title={lead.notes || ""}>
+                          {lead.notes || "—"}
+                        </td>
                         <td className="px-6 py-4 text-xs text-gray-400">{formatDate(lead.createdAt)}</td>
                         <td className="px-6 py-4 text-xs text-gray-400">{formatDate(lead.updatedAt)}</td>
                         
@@ -318,14 +322,14 @@ export default function LeadsPage() {
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
-                className="px-4 py-2 text-xs font-medium border border-gray-200 rounded-xl hover:bg-white disabled:opacity-30 transition-all"
+                className="px-4 py-2 text-xs font-medium border border-gray-200 rounded-lg hover:bg-white disabled:opacity-30 transition-all"
               >
                 Previous
               </button>
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => p + 1)}
-                className="px-4 py-2 text-xs font-medium border border-gray-200 rounded-xl hover:bg-white disabled:opacity-30 transition-all"
+                className="px-4 py-2 text-xs font-medium border border-gray-200 rounded-lg hover:bg-white disabled:opacity-30 transition-all"
               >
                 Next
               </button>

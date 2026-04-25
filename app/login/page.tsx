@@ -1,7 +1,7 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/app/utils/notifications";
@@ -13,6 +13,19 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  // 🔥 SESSION EXPIRY HANDLING (ADDED)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const expired = urlParams.get("expired");
+
+    if (expired === "true") {
+      showToast.error("Session expired. Please login again.");
+
+      // clean URL so toast doesn't repeat
+      window.history.replaceState({}, "", "/login");
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +47,7 @@ export default function LoginPage() {
         showToast.success("Login successful");
         router.push("/");
       }
-    } catch  {
+    } catch {
       setError("An unexpected error occurred");
       showToast.error("An unexpected error occurred");
     } finally {

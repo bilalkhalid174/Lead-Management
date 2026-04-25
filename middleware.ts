@@ -5,44 +5,59 @@ import { getToken } from "next-auth/jwt";
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Get user session token FIRST
+  // ✅ IMPORTANT: Never run middleware on NextAuth APIs
+  if (pathname.startsWith("/api/auth")) {
+    return NextResponse.next();
+  }
+
+  // Get user session token
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  // If logged in → block access to login/register
-  if (token && (pathname === "/login" || pathname === "/register")) {
-    return NextResponse.redirect(new URL("/", req.url));
+  // 🔥 REAL EXPIRY CHECK
+  const isExpired =
+    token?.exp && Date.now() / 1000 > (token.exp as number);
+
+  if (isExpired) {
+    const url = new URL("/login", req.url);
+    url.searchParams.set("expired", "true");
+    return NextResponse.redirect(url);
   }
 
-  // Protect /admin route
-    if (pathname.startsWith("/admin")) {
-    if (token?.role !== "ADMIN") {
-    return NextResponse.redirect(new URL("/", req.url));
+  // If logged in → block login/register
+  if (token && (pathname === "/login" || pathname === "/register")) {
+    return NextResponse.redirect(new URL("/unauthorized", req.url));
   }
-}
+
+  // Protect /admin
+  if (pathname.startsWith("/admin")) {
+    if (token?.role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
+  }
 
   // Allow public routes
   if (
     pathname.startsWith("/login") ||
     pathname.startsWith("/register") ||
-    pathname.startsWith("/api/auth") || // NextAuth routes
-    pathname.startsWith("/_next") || // Next.js internals
+    pathname.startsWith("/_next") ||
     pathname === "/favicon.ico"
   ) {
     return NextResponse.next();
   }
 
-  // If not logged in → redirect to login
+  // If not logged in → redirect
   if (!token) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  // If logged in → allow access
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/((?!api/auth|_next/static|_next/image|favicon.ico).*)",
+  ],
 };

@@ -17,8 +17,6 @@ export async function GET() {
       },
     });
 
-    console.log(`Found ${leads.length} leads for user ${user.id}`); // Check karein terminal mein
-
     return NextResponse.json(leads);
   } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
