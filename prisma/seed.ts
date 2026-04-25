@@ -163,7 +163,7 @@ async function main() {
     ],
   });
 
-  console.log("✅ 15 Leads Seeded Successfully");
+
 }
 
 main()
