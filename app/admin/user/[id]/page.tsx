@@ -78,6 +78,8 @@ export default async function AdminUserLeadsPage({
             <p className="text-sm text-gray-500 mt-1">{targetUser.email}</p>
           </div>
         </div>
+        
+        
 
         {/* --- TABLE SECTION --- */}
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
