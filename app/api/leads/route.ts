@@ -38,7 +38,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // --- IS HISSE KO AISE UPDATE KAREIN ---
     // Hum sirf email check kar rahe hain, userId nikal di hai
     const existing = await prisma.lead.findFirst({
       where: {
@@ -52,7 +51,6 @@ export async function POST(request: Request) {
         { status: 409 }
       );
     }
-    // --------------------------------------
 
     const lead = await prisma.lead.create({
       data: {

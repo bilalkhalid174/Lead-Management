@@ -5,14 +5,14 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 
 export default async function AdminPage() {
-  // 🔒 Auth check (Logic remains untouched)
+  //  Auth check (Logic remains untouched)
   const user = await requireUser();
 
   if (user.role !== "ADMIN") {
     redirect("/");
   }
 
-  // 📊 Fetch data in parallel
+  //  Fetch data in parallel
   const [totalUsers, totalLeads, users] = await Promise.all([
     prisma.user.count(),
     prisma.lead.count(),
