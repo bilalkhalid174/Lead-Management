@@ -12,7 +12,7 @@ export default async function AdminUserLeadsPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ page?: string }>;
 }) {
-  // 🔒 Auth check
+  //  Auth check
   const user = await requireUser();
   if (user.role !== "ADMIN") redirect("/");
 
@@ -26,7 +26,7 @@ export default async function AdminUserLeadsPage({
     return <div className="p-10 text-center font-medium text-gray-500">Invalid User ID</div>;
   }
 
-  // 📦 Fetch total count & paginated leads
+  //  Fetch total count & paginated leads
   const [targetUser, totalLeads] = await Promise.all([
     prisma.user.findUnique({
       where: { id },

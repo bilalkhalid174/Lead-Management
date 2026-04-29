@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // 🔥 SESSION EXPIRY HANDLING (ADDED)
+  //  SESSION EXPIRY HANDLING (ADDED)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const expired = urlParams.get("expired");

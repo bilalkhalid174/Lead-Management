@@ -2,12 +2,39 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 
+// GET
+export async function GET() {
+  try {
+    const user = await requireUser();
+
+    const currentUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        emailNotifications: true,
+      },
+    });
+
+    return NextResponse.json(currentUser);
+  } catch (err) {
+
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+}
+
+// PUT
 export async function PUT(req: NextRequest) {
   try {
     const user = await requireUser();
     const body = await req.json();
 
-    const { name, email } = body;
+
+    const { name, email, emailNotifications } = body;
 
     if (!name || !email) {
       return NextResponse.json(
@@ -16,7 +43,6 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // Optional: check email already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
@@ -33,14 +59,18 @@ export async function PUT(req: NextRequest) {
       data: {
         name,
         email,
+        emailNotifications: Boolean(emailNotifications), 
       },
     });
 
+
     return NextResponse.json(updatedUser);
-  } catch (error) {
+
+  } catch (err) {
+
     return NextResponse.json(
-      { error: "Unauthorized or server error" },
-      { status: 401 }
+      { error: "Server error" },
+      { status: 500 }
     );
   }
 }

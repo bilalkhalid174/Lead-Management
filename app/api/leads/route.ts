@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 
-// ✅ GET ALL LEADS (FILTERED BY USER)
+//  GET ALL LEADS (FILTERED BY USER)
 export async function GET() {
   try {
     const user = await requireUser();
@@ -23,7 +23,7 @@ export async function GET() {
   }
 }
 
-// ✅ CREATE LEAD (AUTO USER ID)
+//  CREATE LEAD (AUTO USER ID)
 export async function POST(request: Request) {
   try {
     const user = await requireUser();

@@ -5,8 +5,13 @@ import { getToken } from "next-auth/jwt";
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // ✅ IMPORTANT: Never run middleware on NextAuth APIs
+  //  IMPORTANT: Never run middleware on NextAuth APIs
   if (pathname.startsWith("/api/auth")) {
+    return NextResponse.next();
+  }
+
+  //  FIX: Allow public API routes (register, etc.)
+  if (pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
 
@@ -16,7 +21,7 @@ export async function middleware(req: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  // 🔥 REAL EXPIRY CHECK
+  //  REAL EXPIRY CHECK
   const isExpired =
     token?.exp && Date.now() / 1000 > (token.exp as number);
 

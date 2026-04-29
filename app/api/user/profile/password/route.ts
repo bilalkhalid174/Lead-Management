@@ -17,7 +17,7 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // 🔹 Get user with password
+    //  Get user with password
     const dbUser = await prisma.user.findUnique({
       where: { id: user.id },
     });
@@ -29,7 +29,7 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // 🔹 Verify current password
+    //  Verify current password
     const isValid = await bcrypt.compare(
       currentPassword,
       dbUser.password
@@ -42,7 +42,7 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // 🔹 Hash new password
+    //  Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     await prisma.user.update({

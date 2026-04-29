@@ -45,33 +45,34 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
 
-  // 🔥 FIX: stop auto session extension
   session: {
     strategy: "jwt",
     maxAge: 60 * 15,
-    updateAge: 0, // IMPORTANT: disables auto refresh
+    updateAge: 0,
   },
 
   callbacks: {
     async jwt({ token, user, trigger, session }) {
-      // ✅ First login logic
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.name = user.name;
         token.email = user.email;
 
-        // 🔥 HARD EXPIRY (FIXED TIME)
         const now = Math.floor(Date.now() / 1000);
         token.iat = now;
         token.exp = now + 60 * 15;
       }
 
-      // 🔥 FIX: Handle client-side update() call
-      // Jab Settings page se update() call hoga, ye trigger naye data ko token mein save karega
+      //  FIXED BLOCK (ONLY CHANGE)
       if (trigger === "update" && session) {
         if (session.name) token.name = session.name;
         if (session.email) token.email = session.email;
+
+        //  ADDED THIS LINE (IMPORTANT FIX)
+        if ((session as any).emailNotifications !== undefined) {
+          (token as any).emailNotifications = (session as any).emailNotifications;
+        }
       }
 
       return token;
@@ -83,6 +84,9 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role as string;
         session.user.name = token.name as string;
         session.user.email = token.email as string;
+
+        //  ADDED THIS LINE (IMPORTANT FIX)
+        (session.user as any).emailNotifications = (token as any).emailNotifications;
       }
 
       return session;

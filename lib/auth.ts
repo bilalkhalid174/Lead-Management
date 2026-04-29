@@ -5,7 +5,7 @@ export async function getAuthSession() {
   return await getServerSession(authOptions);
 }
 
-// 🔒 reusable auth guard
+//  reusable auth guard
 export async function requireUser() {
   const session = await getAuthSession();
 
