@@ -80,9 +80,6 @@ A full-stack lead management application built with Next.js 15, TypeScript, and 
    ```
    Visit http://localhost:3000
 
-### Default Admin Credentials
-- Email: admin@example.com
-- Password: admin123
 
 ## Project Structure
 
@@ -118,57 +115,6 @@ Lead-Management/
 ├── public/
 └── package.json
 ```
-
-## Data Model
-
-### Lead
-| Field | Type | Required |
-|-------|------|----------|
-| id | String (CUID) | Yes |
-| name | String | Yes |
-| email | String (unique) | Yes |
-| phone | String | No |
-| company | String | No |
-| status | Enum (NEW, CONTACTED, QUALIFIED, LOST, CONVERTED) | Yes |
-| notes | String | No |
-| createdAt | DateTime | Yes |
-| updatedAt | DateTime | Yes |
-
-### User
-| Field | Type | Required |
-|-------|------|----------|
-| id | String (CUID) | Yes |
-| email | String (unique) | Yes |
-| name | String | No |
-| role | Enum (USER, ADMIN) | Yes |
-| password | String | Yes |
-| emailNotifications | Boolean | Yes |
-| createdAt | DateTime | Yes |
-| updatedAt | DateTime | Yes |
-
-### ApiKey
-| Field | Type | Required |
-|-------|------|----------|
-| id | String (CUID) | Yes |
-| name | String | Yes |
-| key | String (hashed) | Yes |
-| prefix | String | Yes |
-| lastUsedAt | DateTime | No |
-| isActive | Boolean | Yes |
-| createdAt | DateTime | Yes |
-
-### EmailLog
-| Field | Type | Required |
-|-------|------|----------|
-| id | String (CUID) | Yes |
-| to | String | Yes |
-| subject | String | Yes |
-| type | String | Yes |
-| status | String | Yes |
-| error | String | No |
-| leadId | String | No |
-| userId | String | Yes |
-| createdAt | DateTime | Yes |
 
 ## API Reference
 
