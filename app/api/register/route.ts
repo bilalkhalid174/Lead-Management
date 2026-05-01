@@ -35,8 +35,7 @@ export async function POST(req: Request) {
       WelcomeEmail({ name })
     );
 
-    // FIX: "to" field mein ab "email" variable use kiya hai 
-    // jo register hone waale user ka email hai.
+  
     await sendEmail({
       to: email, 
       subject: "Welcome 🎉",

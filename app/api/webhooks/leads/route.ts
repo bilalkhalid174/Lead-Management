@@ -7,9 +7,7 @@ import { sendEmail } from "@/lib/email";
 import LeadStatusChangeEmail from "@/emails/lead-status-email";
 import { render } from "@react-email/render";
 
-// --------------------
 // Validation schema
-// --------------------
 const leadSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
@@ -18,12 +16,10 @@ const leadSchema = z.object({
   notes: z.string().optional(),
 });
 
-// --------------------
 // WEBHOOK: CREATE LEAD
-// --------------------
 export async function POST(req: Request) {
   try {
-    // 1️⃣ Validate API Key
+    //  Validate API Key
     const auth = await validateApiKey(req);
 
     if (!auth) {
@@ -41,7 +37,7 @@ export async function POST(req: Request) {
 
     const user = auth.user;
 
-    // 2️⃣ Rate limiting
+    //  Rate limiting
     const limit = rateLimit(auth.apiKey.id);
 
     if (!limit.allowed) {
@@ -57,10 +53,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3️⃣ Parse body
+    //  Parse body
     const body = await req.json();
 
-    // 4️⃣ Validate input
+    //  Validate input
     const result = leadSchema.safeParse(body);
 
     if (!result.success) {
@@ -78,7 +74,7 @@ export async function POST(req: Request) {
 
     const data = result.data;
 
-    // 5️⃣ Create lead
+    //  Create lead
     const lead = await prisma.lead.create({
       data: {
         ...data,
@@ -87,7 +83,7 @@ export async function POST(req: Request) {
       },
     });
 
-    // 6️⃣ Send email (FIXED)
+    //  Send email (FIXED)
     try {
       if (user.emailNotifications && user.email) {
         const emailHtml = await render(
@@ -103,7 +99,7 @@ export async function POST(req: Request) {
           subject: `New Lead Received: ${lead.name}`,
           html: emailHtml,
 
-          // ✅ REQUIRED FIELDS (FIXED)
+          //  REQUIRED FIELDS (FIXED)
           userId: user.id,
           leadId: lead.id,
           type: "LEAD_CREATED",
@@ -111,10 +107,10 @@ export async function POST(req: Request) {
       }
     } catch (emailError) {
       console.error("Email sending failed:", emailError);
-      // ❗ do not block webhook
+      //  do not block webhook
     }
 
-    // 7️⃣ Response
+    // Response
     return NextResponse.json(
       {
         success: true,

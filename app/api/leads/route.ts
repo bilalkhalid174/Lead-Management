@@ -5,9 +5,7 @@ import { validateApiKey } from "@/lib/api-auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { Status } from "@prisma/client";
 
-// --------------------
 // Helpers
-// --------------------
 function apiSuccess(data: any, meta?: any) {
   return NextResponse.json({
     success: true,
@@ -26,12 +24,10 @@ function apiError(code: string, message: string, status = 400) {
   );
 }
 
-// --------------------
 // GET LEADS
-// --------------------
 export async function GET(req: Request) {
   try {
-    // 🔐 Auth (API key OR session)
+    //  Auth (API key OR session)
     let userId: string | null = null;
     let apiKeyId: string | null = null;
 
@@ -58,11 +54,11 @@ export async function GET(req: Request) {
       }
     }
 
-    // 📦 Query params
+    //  Query params
     const { searchParams } = new URL(req.url);
     const statusParam = searchParams.get("status");
 
-    // ✅ Safe enum validation
+    //  Safe enum validation
     const status: Status | undefined =
       statusParam && Object.values(Status).includes(statusParam as Status)
         ? (statusParam as Status)
@@ -73,8 +69,6 @@ export async function GET(req: Request) {
       ...(status ? { status } : {}),
     };
 
-    // FIX: Yahan se skip aur take (limit) hata diya gaya ha 
-    // taake frontend apni marzi se pagination kar sake
     const [leads, total] = await Promise.all([
       prisma.lead.findMany({
         where,
@@ -94,12 +88,10 @@ export async function GET(req: Request) {
   }
 }
 
-// --------------------
 // CREATE LEAD
-// --------------------
 export async function POST(req: Request) {
   try {
-    // 🔐 Auth
+    //  Auth
     let userId: string | null = null;
     let apiKeyId: string | null = null;
 
@@ -113,7 +105,7 @@ export async function POST(req: Request) {
       userId = user.id;
     }
 
-    // 🚦 Rate limit
+    //  Rate limit
     if (apiKeyId) {
       const limitCheck = rateLimit(apiKeyId);
 
@@ -133,7 +125,7 @@ export async function POST(req: Request) {
       return apiError("VALIDATION_ERROR", "Name and email required", 400);
     }
 
-    // ❗ Duplicate check (scoped to user)
+    //  Duplicate check (scoped to user)
     const existing = await prisma.lead.findFirst({
       where: {
         email,

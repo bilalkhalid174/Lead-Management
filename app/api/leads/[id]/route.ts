@@ -7,9 +7,7 @@ import { sendEmail } from "@/lib/email";
 import { render } from "@react-email/render";
 import LeadStatusChangeEmail from "@/emails/lead-status-email";
 
-// --------------------
 // Helpers
-// --------------------
 function apiSuccess(data: any) {
   return NextResponse.json({
     success: true,
@@ -27,9 +25,8 @@ function apiError(code: string, message: string, status = 400) {
   );
 }
 
-// --------------------
 // GET SINGLE LEAD
-// --------------------
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -77,9 +74,8 @@ export async function GET(
   }
 }
 
-// --------------------
 // UPDATE LEAD
-// --------------------
+
 export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -129,9 +125,8 @@ export async function PUT(
       data: body,
     });
 
-    // --------------------
     // EMAIL LOGIC (FIXED)
-    // --------------------
+
     const dbUser = await prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -158,7 +153,7 @@ export async function PUT(
         subject: `Lead Status Updated - ${updated.name}`,
         html,
 
-        // ✅ FIXED: required fields
+        //  FIXED: required fields
         userId: userId!,
         leadId: updated.id,
         type: "LEAD_STATUS_CHANGE",
@@ -172,9 +167,9 @@ export async function PUT(
   }
 }
 
-// --------------------
+
 // DELETE LEAD
-// --------------------
+
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }

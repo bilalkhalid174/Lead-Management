@@ -12,16 +12,16 @@ const Navbar = () => {
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
 
-  // 🛠️ Navigation Items List
+  //  Navigation Items List
   const navItems = [
     { label: "Dashboard", route: "/" },
     { label: "Leads", route: "/leads" },
     { label: "Settings", route: "/settings" },
-    // 🔒 Admin link hidden by default
+    //  Admin link hidden by default
     { label: "Admin", route: "/admin", adminOnly: true },
   ];
 
-  // 🛡️ Filter items based on user role
+  //  Filter items based on user role
   // Normal user ko adminOnly items nahi dikhengi
   const filteredNavItems = navItems.filter(item => {
     if (item.adminOnly) {

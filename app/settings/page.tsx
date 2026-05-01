@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Loader2, User, Mail, UserCircle, KeyRound, Settings2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 export default function SettingsPage() {
   const { data: session, update } = useSession();
@@ -97,7 +98,7 @@ export default function SettingsPage() {
         throw new Error(profileData.error || "Profile update failed");
       }
 
-      // ✅ ONLY FIX ADDED HERE
+      //  ONLY FIX ADDED HERE
       await update({
         name,
         email,
@@ -138,13 +139,33 @@ export default function SettingsPage() {
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        <div className="mb-10">
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-gray-950">
-            Account Settings
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Update your profile details, change your password, and manage your account security settings.
-          </p>
+        {/* UPDATED HEADER LAYOUT: Flexbox used to separate title and buttons */}
+        <div className="mb-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6 sm:gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-gray-950">
+              Account Settings
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Update your profile details, change your password, and manage your account security settings.
+            </p>
+          </div>
+
+          {/* QUICK NAVIGATION (Moved to Right Side) */}
+          <div className="flex gap-3 shrink-0">
+            <Link
+              href="/settings/api-keys"
+              className="px-3 py-2 text-sm font-medium border border-gray-200 text-gray-700 bg-white rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+            >
+              API Keys
+            </Link>
+
+            <Link
+              href="/settings/email-log"
+              className="px-3 py-2 text-sm font-medium border border-gray-200 text-gray-700 bg-white rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+            >
+              Email Logs
+            </Link>
+          </div>
         </div>
 
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">

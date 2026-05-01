@@ -1,9 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { hashApiKey } from "@/lib/api-key";
 
-/**
- * Extract and validate API key from Authorization header
- */
+
+//  * Extract and validate API key from Authorization header
 export async function validateApiKey(req: Request) {
   const authHeader = req.headers.get("authorization");
 

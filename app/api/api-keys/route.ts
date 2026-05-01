@@ -7,9 +7,9 @@ import {
   getApiKeyPrefix,
 } from "@/lib/api-key";
 
-/* =========================
-   GET → fetch API keys
-========================= */
+
+  //  GET → fetch API keys
+
 export async function GET() {
   try {
     const user = await requireUser();
@@ -47,9 +47,7 @@ export async function GET() {
   }
 }
 
-/* =========================
-   POST → create API key
-========================= */
+  //  POST → create API key
 export async function POST(req: Request) {
   try {
     const user = await requireUser();

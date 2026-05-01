@@ -15,8 +15,6 @@ model User {
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
   emailNotifications Boolean     @default(true)
-
-  // Relations
   leads              Lead[]
   apiKeys            ApiKey[]
   emailLogs          EmailLog[]
@@ -55,8 +53,8 @@ model EmailLog {
   id        String   @id @default(cuid())
   to        String
   subject   String
-  type      String   // e.g. LEAD_STATUS_CHANGE
-  status    String   // SENT / FAILED / PENDING
+  type      String   
+  status    String   
   error     String?
 
   leadId    String?
