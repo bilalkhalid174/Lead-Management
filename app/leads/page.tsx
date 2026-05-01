@@ -44,9 +44,25 @@ export default function LeadsPage() {
       setLoading(true);
       const res = await fetch("/api/leads");
       if (!res.ok) throw new Error("Failed to fetch leads");
+      
       const data = await res.json();
-      setLeads(data);
-    } catch {
+
+      let extractedLeads: Lead[] = [];
+      
+      if (Array.isArray(data)) {
+        extractedLeads = data;
+      } else if (data && Array.isArray(data.leads)) {
+        extractedLeads = data.leads;
+      } else if (data && Array.isArray(data.data)) {
+        extractedLeads = data.data;
+      } else if (data && typeof data === 'object') {
+        const possibleArray = Object.values(data).find(val => Array.isArray(val));
+        if (possibleArray) extractedLeads = possibleArray as Lead[];
+      }
+
+      setLeads(extractedLeads);
+    } catch (error) {
+      console.error(error);
       showToast.error("Could not load leads from server.");
       setLeads([]);
     } finally {
@@ -55,7 +71,8 @@ export default function LeadsPage() {
   };
 
   const processedLeads = useMemo(() => {
-    let filtered = [...leads];
+    let filtered = Array.isArray(leads) ? [...leads] : [];
+    
     if (statusFilter) filtered = filtered.filter((l) => l.status === statusFilter);
     if (search.trim()) {
       const s = search.toLowerCase();
@@ -73,7 +90,8 @@ export default function LeadsPage() {
     return filtered;
   }, [leads, search, statusFilter, sortBy, sortOrder]);
 
-  const totalPages = Math.ceil(processedLeads.length / itemsPerPage);
+  // Ensure totalPages is at least 1 even if there are no leads
+  const totalPages = Math.max(1, Math.ceil(processedLeads.length / itemsPerPage));
   const paginatedLeads = processedLeads.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleSubmitForm = async (formData: Partial<Lead>) => {
@@ -101,15 +119,20 @@ export default function LeadsPage() {
         throw new Error("Action failed");
       }
 
+      // Show success toast
       if (editingLead) {
-        setLeads(leads.map((l) => (l.id === saved.id ? saved : l)));
         showToast.success("Lead updated successfully!");
       } else {
-        setLeads([...leads, saved]);
         showToast.success("New lead created successfully!");
       }
+
+      // Close the modal
       setIsModalOpen(false);
       setEditingLead(null);
+      
+      // FIX: Fetch fresh leads from server immediately so the UI updates without reload
+      await fetchLeads();
+      
     } catch (err: unknown) {
       showToast.error(err instanceof Error ? err.message : "Something went wrong while saving.");
     } finally {
@@ -122,9 +145,12 @@ export default function LeadsPage() {
       const res = await fetch(`/api/leads/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
       
-      setLeads(leads.filter((l) => l.id !== id));
       setDeleteConfirm(null);
       showToast.success("Lead deleted successfully");
+      
+      // FIX: Fetch fresh leads to keep UI accurately synced
+      await fetchLeads();
+      
     } catch {
       showToast.error("Failed to delete the lead.");
     }
@@ -208,7 +234,7 @@ export default function LeadsPage() {
         </div>
 
         {/* TABLE CONTAINER */}
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden mb-6">
           <div className="overflow-x-auto overflow-y-visible">
             <table className="w-full text-left border-collapse min-w-300">
               <thead>
@@ -313,23 +339,23 @@ export default function LeadsPage() {
         </div>
 
         {/* PAGINATION */}
-        {!loading && totalPages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
+        {!loading && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-gray-500 font-medium">
               Showing page <span className="text-gray-900">{currentPage}</span> of {totalPages}
             </p>
             <div className="flex gap-2">
               <button
                 disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => p - 1)}
-                className="px-4 py-2 text-xs font-medium border border-gray-200 rounded-lg hover:bg-white disabled:opacity-30 transition-all"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                className="px-4 py-2 text-xs font-medium border border-gray-200 rounded-lg hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
                 Previous
               </button>
               <button
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p + 1)}
-                className="px-4 py-2 text-xs font-medium border border-gray-200 rounded-lg hover:bg-white disabled:opacity-30 transition-all"
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                className="px-4 py-2 text-xs font-medium border border-gray-200 rounded-lg hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
                 Next
               </button>

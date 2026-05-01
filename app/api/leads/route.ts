@@ -1,54 +1,151 @@
-
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
+import { validateApiKey } from "@/lib/api-auth";
+import { rateLimit } from "@/lib/rate-limit";
+import { Status } from "@prisma/client";
 
-//  GET ALL LEADS (FILTERED BY USER)
-export async function GET() {
+// --------------------
+// Helpers
+// --------------------
+function apiSuccess(data: any, meta?: any) {
+  return NextResponse.json({
+    success: true,
+    data,
+    meta,
+  });
+}
+
+function apiError(code: string, message: string, status = 400) {
+  return NextResponse.json(
+    {
+      success: false,
+      error: { code, message },
+    },
+    { status }
+  );
+}
+
+// --------------------
+// GET LEADS
+// --------------------
+export async function GET(req: Request) {
   try {
-    const user = await requireUser();
+    // 🔐 Auth (API key OR session)
+    let userId: string | null = null;
+    let apiKeyId: string | null = null;
 
-    const leads = await prisma.lead.findMany({
-      where: {
-        userId: user.id,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
+    const auth = await validateApiKey(req);
+
+    if (auth) {
+      userId = auth.user.id;
+      apiKeyId = auth.apiKey.id;
+    } else {
+      const user = await requireUser();
+      userId = user.id;
+    }
+
+    // 🚦 Rate limit (only API key usage)
+    if (apiKeyId) {
+      const limitCheck = rateLimit(apiKeyId);
+
+      if (!limitCheck.allowed) {
+        return apiError(
+          "RATE_LIMITED",
+          `Too many requests. Try again in ${limitCheck.retryAfter}s`,
+          429
+        );
+      }
+    }
+
+    // 📦 Query params
+    const { searchParams } = new URL(req.url);
+    const statusParam = searchParams.get("status");
+
+    // ✅ Safe enum validation
+    const status: Status | undefined =
+      statusParam && Object.values(Status).includes(statusParam as Status)
+        ? (statusParam as Status)
+        : undefined;
+
+    const where = {
+      userId,
+      ...(status ? { status } : {}),
+    };
+
+    // FIX: Yahan se skip aur take (limit) hata diya gaya ha 
+    // taake frontend apni marzi se pagination kar sake
+    const [leads, total] = await Promise.all([
+      prisma.lead.findMany({
+        where,
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
+      prisma.lead.count({ where }),
+    ]);
+
+    return apiSuccess(leads, {
+      total,
     });
-
-    return NextResponse.json(leads);
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  } catch (error) {
+    console.error("GET_LEADS_ERROR:", error);
+    return apiError("SERVER_ERROR", "Something went wrong", 500);
   }
 }
 
-//  CREATE LEAD (AUTO USER ID)
-export async function POST(request: Request) {
+// --------------------
+// CREATE LEAD
+// --------------------
+export async function POST(req: Request) {
   try {
-    const user = await requireUser();
-    const body = await request.json();
+    // 🔐 Auth
+    let userId: string | null = null;
+    let apiKeyId: string | null = null;
 
+    const auth = await validateApiKey(req);
+
+    if (auth) {
+      userId = auth.user.id;
+      apiKeyId = auth.apiKey.id;
+    } else {
+      const user = await requireUser();
+      userId = user.id;
+    }
+
+    // 🚦 Rate limit
+    if (apiKeyId) {
+      const limitCheck = rateLimit(apiKeyId);
+
+      if (!limitCheck.allowed) {
+        return apiError(
+          "RATE_LIMITED",
+          `Too many requests. Try again in ${limitCheck.retryAfter}s`,
+          429
+        );
+      }
+    }
+
+    const body = await req.json();
     const { name, email, phone, company, status, notes } = body;
 
     if (!name || !email) {
-      return NextResponse.json(
-        { error: "Name and email required" },
-        { status: 400 }
-      );
+      return apiError("VALIDATION_ERROR", "Name and email required", 400);
     }
 
-    // Hum sirf email check kar rahe hain, userId nikal di hai
+    // ❗ Duplicate check (scoped to user)
     const existing = await prisma.lead.findFirst({
       where: {
-        email: email, 
+        email,
+        userId,
       },
     });
 
     if (existing) {
-      return NextResponse.json(
-        { error: "Lead already exists with this email" },
-        { status: 409 }
+      return apiError(
+        "DUPLICATE",
+        "Lead already exists with this email",
+        409
       );
     }
 
@@ -60,17 +157,23 @@ export async function POST(request: Request) {
         company,
         status: status || "NEW",
         notes,
-        userId: user.id,
+        userId,
       },
     });
 
-    return NextResponse.json(lead, { status: 201 });
-
-  } catch (error: any) {
-    console.error("PRISMA_ERROR:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to create lead" },
-      { status: 500 }
+      {
+        success: true,
+        data: lead,
+      },
+      { status: 201 }
+    );
+  } catch (error: any) {
+    console.error("CREATE_LEAD_ERROR:", error);
+    return apiError(
+      "SERVER_ERROR",
+      error.message || "Failed to create lead",
+      500
     );
   }
 }

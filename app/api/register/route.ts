@@ -35,17 +35,21 @@ export async function POST(req: Request) {
       WelcomeEmail({ name })
     );
 
+    // FIX: "to" field mein ab "email" variable use kiya hai 
+    // jo register hone waale user ka email hai.
     await sendEmail({
-      to: "jarwis1741@gmail.com",
+      to: email, 
       subject: "Welcome 🎉",
       html,
+      userId: user.id,
     });
 
     return NextResponse.json(
       { message: "User created successfully", user },
       { status: 201 }
     );
-  } catch {
+  } catch (error) {
+    console.error("Registration Error:", error);
     return NextResponse.json(
       { message: "Server error" },
       { status: 500 }

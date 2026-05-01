@@ -12,13 +12,13 @@ const prisma = new PrismaClient({
 
 async function main() {
   // Create a seed user first
-  const hashedPassword = await bcrypt.hash("password123", 10);
+  const hashedPassword = await bcrypt.hash("jarwis174", 10);
   const user = await prisma.user.upsert({
-    where: { email: "umumtaz617@gmail.com" },
+    where: { email: "jarwis174@gmail.com" },
     update: {},
     create: {
-      name: "Umair Mumtaz",
-      email: "umumtaz617@gmail.com",
+      name: "jarwis2",
+      email: "jarwis174@gmail.com",
       password: hashedPassword,
     },
   });
@@ -27,7 +27,7 @@ async function main() {
     data: [
       {
         name: "Zeeshan Haider",
-        email: "zeeshan.haider@newmail.com",
+        email: "zeeshan.haide@newmail.com",
         phone: "03009876543",
         company: "Nexus Systems",
         status: Status.NEW,
@@ -36,7 +36,7 @@ async function main() {
       },
       {
         name: "Hiba Noor",
-        email: "hiba.noor@provider.com",
+        email: "hiba.noo@provider.com",
         phone: "03119876543",
         company: "Stellar Apps",
         status: Status.CONTACTED,
@@ -45,7 +45,7 @@ async function main() {
       },
       {
         name: "Kamran Akmal",
-        email: "kamran.akmal@techhub.com",
+        email: "kamran.akml@techhub.com",
         phone: "03229876543",
         company: "DataStream",
         status: Status.QUALIFIED,
@@ -54,7 +54,7 @@ async function main() {
       },
       {
         name: "Saba Qamar",
-        email: "saba.qamar@creative.com",
+        email: "saba.qaar@creative.com",
         phone: "03339876543",
         company: "Design Studio",
         status: Status.LOST,
@@ -62,7 +62,7 @@ async function main() {
         userId: user.id,
       },
       {
-        name: "Faisal Qureshi",
+        name: "Faisal Queshi",
         email: "faisal.q@logistics.com",
         phone: "03449876543",
         company: "Swift Delivery",
@@ -72,7 +72,7 @@ async function main() {
       },
       {
         name: "Amna Sheikh",
-        email: "amna.s@healthplus.com",
+        email: "amn.s@healthplus.com",
         phone: "03017654321",
         company: "HealthPlus",
         status: Status.NEW,
@@ -81,7 +81,7 @@ async function main() {
       },
       {
         name: "Waqas Ahmed",
-        email: "waqas.ahmed@buildit.com",
+        email: "waqs.ahmed@buildit.com",
         phone: "03127654321",
         company: "BuildIt Construction",
         status: Status.CONTACTED,
@@ -90,7 +90,7 @@ async function main() {
       },
       {
         name: "Rida Batool",
-        email: "rida.b@education.com",
+        email: "ria.b@education.com",
         phone: "03237654321",
         company: "EduTrack",
         status: Status.QUALIFIED,
@@ -99,7 +99,7 @@ async function main() {
       },
       {
         name: "Saad Ali",
-        email: "saad.ali@fintech.com",
+        email: "saad.ai@fintech.com",
         phone: "03347654321",
         company: "Prime Finance",
         status: Status.LOST,
@@ -108,7 +108,7 @@ async function main() {
       },
       {
         name: "Tayyaba Gul",
-        email: "tayyaba.g@fashion.com",
+        email: "tayyab.g@fashion.com",
         phone: "03457654321",
         company: "Urban Wear",
         status: Status.CONVERTED,
@@ -117,7 +117,7 @@ async function main() {
       },
       {
         name: "Jawad Karim",
-        email: "jawad.k@automotive.com",
+        email: "jawd.k@automotive.com",
         phone: "03091122334",
         company: "AutoDrive",
         status: Status.NEW,
@@ -126,7 +126,7 @@ async function main() {
       },
       {
         name: "Mehwish Hayat",
-        email: "mehwish.h@media.com",
+        email: "mehwish.@media.com",
         phone: "03181122334",
         company: "Star Media",
         status: Status.CONTACTED,
@@ -135,7 +135,7 @@ async function main() {
       },
       {
         name: "Danish Taimoor",
-        email: "danish.t@realestate.com",
+        email: "danish.tq@realestate.com",
         phone: "03271122334",
         company: "Estate Masters",
         status: Status.QUALIFIED,
@@ -144,7 +144,7 @@ async function main() {
       },
       {
         name: "Mona Khan",
-        email: "mona.k@travels.com",
+        email: "mona.ka@travels.com",
         phone: "03361122334",
         company: "Global Travels",
         status: Status.LOST,
@@ -153,7 +153,7 @@ async function main() {
       },
       {
         name: "Salman Shahid",
-        email: "salman.s@security.com",
+        email: "salman.sf@security.com",
         phone: "03451122334",
         company: "Safe Guard",
         status: Status.CONVERTED,

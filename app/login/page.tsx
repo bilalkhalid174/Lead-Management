@@ -95,9 +95,6 @@ export default function LoginPage() {
               <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-800">
                 Password
               </label>
-              <button type="button" className="text-[11px] font-semibold text-zinc-900 hover:underline">
-                Forgot?
-              </button>
             </div>
 
             <div className="relative group">

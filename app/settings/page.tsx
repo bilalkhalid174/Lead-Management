@@ -31,8 +31,7 @@ export default function SettingsPage() {
         setName(data.name);
         setEmail(data.email);
         setEmailNotifications(Boolean(data.emailNotifications));
-      } catch (err) {
-      }
+      } catch (err) {}
     };
 
     fetchSettings();
@@ -44,7 +43,6 @@ export default function SettingsPage() {
     setNewPassword("");
   };
 
-  // 🔥 NEW: Toggle with instant DB save
   const handleToggleNotifications = async () => {
     const newValue = !emailNotifications;
 
@@ -69,7 +67,6 @@ export default function SettingsPage() {
 
       toast.success(newValue ? "Notifications ON" : "Notifications OFF");
     } catch (err) {
-      // rollback if failed
       setEmailNotifications(emailNotifications);
       toast.error("Failed to update toggle");
     } finally {
@@ -78,7 +75,6 @@ export default function SettingsPage() {
   };
 
   const handleUpdateAccount = async () => {
-
     if (!name || !email) {
       toast.error("Name and Email are required");
       return;
@@ -100,6 +96,12 @@ export default function SettingsPage() {
         const profileData = await profileRes.json();
         throw new Error(profileData.error || "Profile update failed");
       }
+
+      // ✅ ONLY FIX ADDED HERE
+      await update({
+        name,
+        email,
+      });
 
       if (newPassword) {
         if (!currentPassword) {

@@ -7,15 +7,19 @@ datasource db {
 }
 
 model User {
-  id                 String   @id @default(cuid())
+  id                 String      @id @default(cuid())
   name               String
-  email              String   @unique
+  email              String      @unique
   password           String
-  role               Role     @default(USER)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  emailNotifications Boolean  @default(true)
+  role               Role        @default(USER)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  emailNotifications Boolean     @default(true)
+
+  // Relations
   leads              Lead[]
+  apiKeys            ApiKey[]
+  emailLogs          EmailLog[]
 }
 
 model Lead {
@@ -28,8 +32,39 @@ model Lead {
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ApiKey {
+  id         String   @id @default(cuid())
+  name       String
+  key        String   //  hashed key (SHA-256)
+  prefix     String   // first 8 chars (display only)
+  lastUsedAt DateTime?
+  isActive   Boolean  @default(true)
+
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+}
+
+model EmailLog {
+  id        String   @id @default(cuid())
+  to        String
+  subject   String
+  type      String   // e.g. LEAD_STATUS_CHANGE
+  status    String   // SENT / FAILED / PENDING
+  error     String?
+
+  leadId    String?
+  userId    String
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 }
 
 enum Status {
